@@ -1,0 +1,20 @@
+# Dependencies & generated output
+node_modules/
+dist/
+release/
+vendor/
+
+# Secrets & machine-specific certificates — never commit
+.env*
+*.key
+*.pem
+*.crt
+*.p12
+*.bak*
+
+# Logs / OS / editor noise
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,15 @@
+# Only what the build needs goes into the image context.
+node_modules
+dist
+release
+vendor
+.git
+.gitignore
+.dockerignore
+Dockerfile
+*.log
+.env*
+*.pem
+*.key
+.claude
+serve.json

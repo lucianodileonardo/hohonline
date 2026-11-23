@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>North Pole Online</title>
+  <meta name="description" content="North Pole Online — free, no registration. Ask Santa if you've been good, write him a letter, get a call from Santa, track his sleigh and more!">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎅</text></svg>">
+  <!-- Everything is self-hosted. Only map tiles come from OpenStreetMap. Keep in sync with nginx.conf. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://tile.openstreetmap.org; font-src 'self'; connect-src 'self'; media-src 'none'; object-src 'none'; worker-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="snow" aria-hidden="true"></canvas>
+
+  <header class="site-header no-print">
+    <a class="brand" href="#">🎅 North Pole Online</a>
+    <nav class="nav" id="nav" aria-label="Features">
+      <!-- feature links are injected by js/main.js -->
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero__santa" aria-hidden="true">🎅</div>
+      <h1 class="hero__title">North Pole Online</h1>
+      <p class="hero__subtitle">
+        A direct line to the North Pole. Free for everyone — no registration, no login, just Christmas magic.
+      </p>
+      <p class="hero__countdown" id="countdown" aria-live="polite"></p>
+    </section>
+
+    <section class="features" aria-labelledby="features-title">
+      <h2 id="features-title" class="visually-hidden">Features</h2>
+      <div class="feature-grid" id="feature-grid">
+        <!-- feature cards are injected by js/main.js -->
+      </div>
+    </section>
+
+    <!-- ============ Feature: Naughty or Nice ============ -->
+    <section class="feature-panel" data-feature="naughty-or-nice" aria-labelledby="non-title">
+      <div class="card">
+        <h2 id="non-title" class="card__title">📜 Have I Been Good?</h2>
+        <p class="card__lead">Tell Santa your name and he'll check his famous list for you.</p>
+
+        <form class="non-form" id="non-form" autocomplete="off">
+          <label for="non-name">Your name</label>
+          <div class="non-form__row">
+            <input id="non-name" name="name" type="text" maxlength="40" placeholder="e.g. Emma" required>
+            <button type="submit" class="btn btn--primary">Ask Santa</button>
+          </div>
+        </form>
+
+        <div class="non-checking" id="non-checking" hidden aria-live="polite">
+          <div class="scroll" aria-hidden="true">
+            <div class="scroll__paper">
+              <span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <p class="non-checking__text" id="non-checking-text">Santa is unrolling his list…</p>
+        </div>
+
+        <div class="non-result" id="non-result" hidden aria-live="polite">
+          <div class="non-result__badge">⭐ NICE LIST ⭐</div>
+          <h3 class="non-result__title" id="non-result-title"></h3>
+          <p class="non-result__msg" id="non-result-msg"></p>
+          <p class="non-result__sign">— Santa Claus, North Pole</p>
+          <div class="actions">
+            <button type="button" class="btn btn--primary" id="non-certificate">🏅 Get my Nice Certificate</button>
+            <button type="button" class="btn btn--ghost" id="non-again">Ask for someone else</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Feature: Nice Certificate ============ -->
+    <section class="feature-panel" data-feature="nice-certificate" aria-labelledby="cert-title">
+      <div class="card card--wide">
+        <h2 id="cert-title" class="card__title no-print">🏅 Nice List Certificate</h2>
+        <p class="card__lead no-print">An official certificate, signed by Santa himself. Download it or print it and hang it on the fridge!</p>
+
+        <form class="inline-form no-print" id="cert-form" autocomplete="off">
+          <label for="cert-name">Whose name goes on the certificate?</label>
+          <div class="inline-form__row">
+            <input id="cert-name" type="text" maxlength="40" placeholder="e.g. Emma" required>
+            <button type="submit" class="btn btn--primary">Create certificate</button>
+          </div>
+        </form>
+
+        <div id="cert-result" hidden>
+          <canvas class="output-canvas output-canvas--print" id="cert-canvas" width="1600" height="1131" role="img" aria-label="Nice List Certificate"></canvas>
+          <div class="actions no-print">
+            <button type="button" class="btn btn--primary" id="cert-download">⬇️ Download</button>
+            <button type="button" class="btn btn--green" id="cert-print">🖨️ Print</button>
+            <button type="button" class="btn btn--ghost" id="cert-again">Make another</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Feature: Letter to Santa ============ -->
+    <section class="feature-panel" data-feature="letter-to-santa" aria-labelledby="letter-title">
+      <div class="card card--wide">
+        <h2 id="letter-title" class="card__title no-print">✉️ Letter to Santa</h2>
+        <p class="card__lead no-print">Write your letter, add your wishes, and send it straight to the North Pole. Santa always writes back!</p>
+
+        <form class="letter-form" id="letter-form" autocomplete="off" novalidate>
+          <div class="letter-paper">
+            <p class="letter-paper__greeting">Dear Santa,</p>
+
+            <div class="letter-form__row">
+              <div class="field field--grow">
+                <label for="letter-name">My name is</label>
+                <input id="letter-name" type="text" maxlength="40" placeholder="Your name">
+              </div>
+              <div class="field field--age">
+                <label for="letter-age">Age <span class="optional">(optional)</span></label>
+                <input id="letter-age" type="number" min="1" max="120" inputmode="numeric" placeholder="8">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="letter-message">My letter <span class="optional">(optional)</span></label>
+              <textarea id="letter-message" rows="5" maxlength="1500" placeholder="Tell Santa about your year, the good things you did, or anything you'd like to say…"></textarea>
+            </div>
+
+            <div class="field">
+              <label for="letter-wish">This year I would like…</label>
+              <div class="letter-form__wish-row">
+                <input id="letter-wish" type="text" maxlength="60" placeholder="e.g. a red bicycle">
+                <button type="button" class="btn btn--green" id="letter-add-wish">+ Add</button>
+              </div>
+              <ul class="wish-list" id="letter-wishes" aria-label="Your wish list"></ul>
+              <p class="field__hint" id="letter-wish-hint"></p>
+            </div>
+
+            <label class="checkbox">
+              <input type="checkbox" id="letter-promise">
+              <span>I promise to be good! 😇</span>
+            </label>
+          </div>
+
+          <p class="form-error" id="letter-error" role="alert" hidden></p>
+
+          <div class="letter-form__actions">
+            <button type="submit" class="btn btn--primary btn--big">📮 Send to the North Pole</button>
+          </div>
+        </form>
+
+        <div class="letter-sending" id="letter-sending" hidden aria-live="polite">
+          <div class="envelope" aria-hidden="true">✉️</div>
+          <p class="letter-sending__text" id="letter-sending-text"></p>
+        </div>
+
+        <div class="letter-reply" id="letter-reply" hidden aria-live="polite">
+          <div class="letter-reply__stamp no-print" aria-hidden="true">📬 You've got mail from the North Pole!</div>
+          <article class="letter-paper letter-paper--santa">
+            <div class="letter-paper__header">🎅 From the desk of Santa Claus · North Pole</div>
+            <div id="letter-reply-body"></div>
+          </article>
+          <details class="letter-original-wrap">
+            <summary class="no-print">Your letter to Santa</summary>
+            <article class="letter-paper" id="letter-original"></article>
+          </details>
+          <div class="actions no-print">
+            <button type="button" class="btn btn--primary" id="letter-print">🖨️ Print letters</button>
+            <button type="button" class="btn btn--ghost" id="letter-again">Write another letter</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Feature: Call from Santa ============ -->
+    <section class="feature-panel" data-feature="santa-call" aria-labelledby="call-title">
+      <div class="card">
+        <h2 id="call-title" class="card__title">📞 Call from Santa</h2>
+        <p class="card__lead">Santa will call you on a magic video call and talk to you personally. Turn your sound on! 🔊</p>
+
+        <form class="inline-form" id="call-form" autocomplete="off">
+          <label for="call-name">Who is Santa calling?</label>
+          <div class="inline-form__row">
+            <input id="call-name" type="text" maxlength="40" placeholder="e.g. Emma" required>
+            <button type="submit" class="btn btn--primary">📞 Call Santa</button>
+          </div>
+        </form>
+
+        <div class="phone" id="call-phone" hidden>
+          <div class="phone__screen" id="call-screen">
+            <div class="phone__top">
+              <span class="phone__status" id="call-status">Calling the North Pole…</span>
+              <span class="phone__timer" id="call-timer"></span>
+            </div>
+            <div class="phone__avatar" id="call-avatar" aria-hidden="true">🎅</div>
+            <div class="phone__name">Santa Claus</div>
+            <p class="phone__subtitle" id="call-subtitle" aria-live="polite"></p>
+            <div class="phone__controls">
+              <button type="button" class="phone__btn phone__btn--mute" id="call-mute" aria-pressed="false" title="Mute Santa's voice">🔊</button>
+              <button type="button" class="phone__btn phone__btn--hangup" id="call-hangup" title="Hang up">📞</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="call-ended" id="call-ended" hidden>
+          <p class="call-ended__title">📴 Call ended</p>
+          <p id="call-ended-text"></p>
+          <div class="actions">
+            <button type="button" class="btn btn--primary" id="call-again">📞 Call again</button>
+            <button type="button" class="btn btn--ghost" id="call-new">Call for someone else</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Feature: Elf Name Generator ============ -->
+    <section class="feature-panel" data-feature="elf-name" aria-labelledby="elf-title">
+      <div class="card card--wide">
+        <h2 id="elf-title" class="card__title no-print">🧝 Elf Name Generator</h2>
+        <p class="card__lead no-print">Every elf at the North Pole has a special name and job. Discover yours and get your official Elf ID card!</p>
+
+        <form class="inline-form no-print" id="elf-form" autocomplete="off">
+          <label for="elf-input">Your real name</label>
+          <div class="inline-form__row">
+            <input id="elf-input" type="text" maxlength="40" placeholder="e.g. Emma" required>
+            <button type="submit" class="btn btn--primary">✨ Find my elf name</button>
+          </div>
+        </form>
+
+        <div id="elf-result" hidden>
+          <p class="elf-reveal" id="elf-reveal" aria-live="polite"></p>
+          <canvas class="output-canvas output-canvas--print" id="elf-canvas" width="1000" height="630" role="img" aria-label="Elf ID card"></canvas>
+          <div class="actions no-print">
+            <button type="button" class="btn btn--primary" id="elf-download">⬇️ Download ID card</button>
+            <button type="button" class="btn btn--green" id="elf-share">📤 Share</button>
+            <button type="button" class="btn btn--ghost" id="elf-again">Try another name</button>
+          </div>
+          <p class="field__hint text-center" id="elf-share-hint" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Feature: Reindeer Quiz ============ -->
+    <section class="feature-panel" data-feature="reindeer-quiz" aria-labelledby="quiz-title">
+      <div class="card">
+        <h2 id="quiz-title" class="card__title">🦌 Which Reindeer Are You?</h2>
+        <p class="card__lead">Answer a few questions and find out which of Santa's reindeer is most like you!</p>
+
+        <div class="quiz-start" id="quiz-start">
+          <div class="quiz-start__deer" aria-hidden="true">🦌🛷🦌</div>
+          <button type="button" class="btn btn--primary btn--big" id="quiz-begin">Start the quiz</button>
+        </div>
+
+        <div class="quiz" id="quiz-body" hidden>
+          <div class="quiz__progress" aria-hidden="true"><div class="quiz__bar" id="quiz-bar"></div></div>
+          <p class="quiz__count" id="quiz-count"></p>
+          <h3 class="quiz__question" id="quiz-question"></h3>
+          <div class="quiz__answers" id="quiz-answers"></div>
+        </div>
+
+        <div class="quiz-result" id="quiz-result" hidden aria-live="polite">
+          <p class="quiz-result__pre">You are…</p>
+          <div class="quiz-result__emoji" id="quiz-result-emoji" aria-hidden="true"></div>
+          <h3 class="quiz-result__name" id="quiz-result-name"></h3>
+          <p class="quiz-result__tagline" id="quiz-result-tagline"></p>
+          <p class="quiz-result__desc" id="quiz-result-desc"></p>
+          <div class="actions">
+            <button type="button" class="btn btn--primary" id="quiz-again">🔄 Take the quiz again</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Feature: Advent Calendar ============ -->
+    <section class="feature-panel" data-feature="advent-calendar" aria-labelledby="advent-title">
+      <div class="card card--xwide">
+        <h2 id="advent-title" class="card__title">📅 Advent Calendar</h2>
+        <p class="card__lead">A little surprise every day from December 1st to Christmas Eve. One door a day — no peeking!</p>
+        <p class="advent-banner" id="advent-banner" aria-live="polite"></p>
+        <div class="advent-grid" id="advent-grid"></div>
+        <p class="field__hint text-center" id="advent-hint" aria-live="polite"></p>
+      </div>
+
+      <dialog class="advent-dialog" id="advent-dialog" aria-labelledby="advent-dialog-title">
+        <div class="advent-dialog__day" id="advent-dialog-day"></div>
+        <div class="advent-dialog__icon" id="advent-dialog-icon" aria-hidden="true"></div>
+        <h3 class="advent-dialog__title" id="advent-dialog-title"></h3>
+        <div class="advent-dialog__body" id="advent-dialog-body"></div>
+        <form method="dialog" class="actions">
+          <button class="btn btn--primary">Close</button>
+        </form>
+      </dialog>
+    </section>
+
+    <!-- ============ Feature: Decorate the Tree ============ -->
+    <section class="feature-panel" data-feature="decorate-tree" aria-labelledby="tree-title">
+      <div class="card card--xwide">
+        <h2 id="tree-title" class="card__title">🎄 Decorate the Tree</h2>
+        <p class="card__lead">Pick a decoration, then tap the tree to hang it. Drag decorations to move them. When you're done, download your tree!</p>
+
+        <div class="tree-layout">
+          <div class="tree-tools">
+            <p class="tree-tools__label">Decorations</p>
+            <div class="tree-palette" id="tree-palette" role="radiogroup" aria-label="Decorations"></div>
+            <p class="tree-tools__label">Tools</p>
+            <div class="tree-buttons">
+              <button type="button" class="btn btn--small" id="tree-eraser" aria-pressed="false">🧽 Eraser</button>
+              <button type="button" class="btn btn--small" id="tree-lights" aria-pressed="false">💡 Lights</button>
+              <button type="button" class="btn btn--small" id="tree-star" aria-pressed="false">⭐ Top star</button>
+              <button type="button" class="btn btn--small" id="tree-undo">↩️ Undo</button>
+              <button type="button" class="btn btn--small" id="tree-clear">🗑️ Clear</button>
+            </div>
+            <button type="button" class="btn btn--primary tree-download" id="tree-download">⬇️ Download my tree</button>
+          </div>
+          <div class="tree-stage">
+            <canvas id="tree-canvas" width="800" height="900" aria-label="Your Christmas tree. Tap to add the selected decoration."></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Feature: Santa Tracker ============ -->
+    <section class="feature-panel" data-feature="santa-tracker" aria-labelledby="tracker-title">
+      <div class="card card--xwide">
+        <h2 id="tracker-title" class="card__title">🛷 Santa Tracker</h2>
+        <p class="card__lead">Follow Santa's sleigh as he delivers gifts around the world on Christmas Eve.</p>
+
+        <div class="tracker-status">
+          <div class="tracker-status__main">
+            <span class="tracker-status__phase" id="tracker-phase"></span>
+            <p class="tracker-status__text" id="tracker-text" aria-live="polite"></p>
+          </div>
+          <div class="tracker-stats">
+            <div class="tracker-stat">
+              <span class="tracker-stat__label" id="tracker-stat1-label"></span>
+              <span class="tracker-stat__value" id="tracker-stat1"></span>
+            </div>
+            <div class="tracker-stat">
+              <span class="tracker-stat__label" id="tracker-stat2-label"></span>
+              <span class="tracker-stat__value" id="tracker-stat2"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tracker-map" id="tracker-map"></div>
+
+        <div class="actions">
+          <label class="checkbox checkbox--small">
+            <input type="checkbox" id="tracker-follow" checked>
+            <span>Follow Santa on the map</span>
+          </label>
+          <button type="button" class="btn btn--green btn--small" id="tracker-demo">▶️ Preview Christmas Eve</button>
+        </div>
+        <p class="field__hint text-center" id="tracker-hint"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer no-print">
+    <p>Made with ❤️ at the North Pole · Free forever · No sign-up needed</p>
+  </footer>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/features/registry.js"></script>
+  <script src="js/features/naughty-or-nice.js"></script>
+  <script src="js/features/nice-certificate.js"></script>
+  <script src="js/features/letter-to-santa.js"></script>
+  <script src="js/features/santa-call.js"></script>
+  <script src="js/features/elf-name.js"></script>
+  <script src="js/features/reindeer-quiz.js"></script>
+  <script src="js/features/advent-calendar.js"></script>
+  <script src="js/features/decorate-tree.js"></script>
+  <script src="js/features/santa-tracker.js"></script>
+  <script src="js/snow.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

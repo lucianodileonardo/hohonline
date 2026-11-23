@@ -1,0 +1,26 @@
+{
+  "name": "north-pole-online",
+  "version": "0.1.0",
+  "private": true,
+  "description": "North Pole Online — free, no registration. Letters, calls and games with Santa, plus a live Santa Tracker.",
+  "scripts": {
+    "vendor": "node scripts/vendor.mjs",
+    "start": "npm run vendor && serve . -l tcp://0.0.0.0:3000",
+    "dev": "npm run start",
+    "build": "npm run vendor && node scripts/build.mjs",
+    "preview": "npm run build && serve dist -l tcp://0.0.0.0:4000",
+    "package": "npm run build && node scripts/package.mjs",
+    "container:build": "podman build --format docker -t north-pole-online .",
+    "container:run": "podman run -d --name north-pole-online --replace -p 8080:8080 --read-only --tmpfs /tmp:rw,noexec,nosuid,size=16m --cap-drop=ALL --security-opt=no-new-privileges --memory=128m --pids-limit=100 north-pole-online",
+    "container:stop": "podman stop north-pole-online",
+    "audit": "npm audit",
+    "deploy:apache": "npm run build && sudo bash deploy/apache/deploy.sh"
+  },
+  "devDependencies": {
+    "@fontsource/mountains-of-christmas": "5.3.0",
+    "@fontsource/nunito": "5.3.0",
+    "esbuild": "^0.28.2",
+    "leaflet": "1.9.4",
+    "serve": "^14.2.8"
+  }
+}
