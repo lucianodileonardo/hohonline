@@ -12,4 +12,3 @@ Dockerfile
 *.pem
 *.key
 .claude
-serve.json

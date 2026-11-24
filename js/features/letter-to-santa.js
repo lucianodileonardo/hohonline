@@ -8,31 +8,7 @@
 
   const MAX_WISHES = 10;
 
-  const SENDING_STEPS = [
-    "Folding your letter…",
-    "Sealing the envelope with a candy cane stamp…",
-    "Handing it to the reindeer post…",
-    "Flying over the snowy mountains…",
-    "Delivered to the North Pole! 🎅",
-  ];
-
-  const OPENINGS = [
-    "Thank you so much for your wonderful letter! I read it by the fireplace with a cup of hot cocoa.",
-    "What a joy to find your letter in my mailbag today! Mrs. Claus and I read it together.",
-    "Your letter just arrived at the North Pole, and it made me smile from ear to ear!",
-  ];
-
-  const WISH_LINES = [
-    "The elves have pinned your wish list on the big board in the workshop.",
-    "I've passed your wish list to my most careful elves.",
-    "Your wish list is now safely tucked in my big red book.",
-  ];
-
-  const CLOSINGS = [
-    "Keep being kind, help the people around you, and don't forget to leave a carrot for Rudolph!",
-    "Remember: the best gifts are the kindness we share. Keep shining!",
-    "Stay warm, be good to your family and friends, and I'll see you on Christmas Eve!",
-  ];
+  const { t } = I18n;
 
   function init() {
     const form = document.getElementById("letter-form");
@@ -69,7 +45,7 @@
         const remove = document.createElement("button");
         remove.type = "button";
         remove.className = "wish-chip__remove";
-        remove.setAttribute("aria-label", `Remove ${wish}`);
+        remove.setAttribute("aria-label", t("letter.removeWish", { wish }));
         remove.textContent = "×";
         remove.addEventListener("click", () => {
           wishes.splice(i, 1);
@@ -83,8 +59,8 @@
       wishInput.disabled = full;
       addWishBtn.disabled = full;
       wishHint.textContent = full
-        ? `That's ${MAX_WISHES} wishes — the sleigh is full!`
-        : `${wishes.length}/${MAX_WISHES} wishes`;
+        ? t("letter.full", { max: MAX_WISHES })
+        : t("letter.count", { n: wishes.length, max: MAX_WISHES });
     }
 
     function addWish() {
@@ -128,7 +104,7 @@
       restartAnimation(envelope);
       sending.scrollIntoView({ behavior: "smooth", block: "center" });
 
-      playSteps(sendingText, SENDING_STEPS, 800, () => {
+      playSteps(sendingText, t("letter.steps"), 800, () => {
         sending.hidden = true;
         renderReply(letter);
         reply.hidden = false;
@@ -140,11 +116,11 @@
     function validate(letter) {
       if (!letter.name) {
         nameInput.focus();
-        return "Santa needs to know your name to write back!";
+        return t("letter.errName");
       }
       if (!letter.wishes.length && !letter.message) {
         wishInput.focus();
-        return "Add at least one wish or write a message for Santa.";
+        return t("letter.errEmpty");
       }
       return "";
     }
@@ -153,54 +129,46 @@
     function renderReply(letter) {
       const paragraphs = [];
 
-      let opening = pick(OPENINGS);
-      if (letter.age) {
-        opening += ` You're ${letter.age} years old now — my, how you've grown since last Christmas!`;
-      }
+      let opening = pick(t("letter.openings"));
+      if (letter.age) opening += " " + t("letter.age", { age: letter.age });
       paragraphs.push(opening);
 
       if (letter.wishes.length) {
-        let wishLine = `${pick(WISH_LINES)} You asked for ${joinList(letter.wishes)}.`;
-        if (letter.wishes.length >= 5) {
-          wishLine += " That's quite a list — the elves are rolling up their sleeves!";
-        } else {
-          wishLine += " The elves and I will do our very best.";
-        }
+        let wishLine = `${pick(t("letter.wishLines"))} ${t("letter.asked", { wishes: I18n.list(letter.wishes) })}`;
+        wishLine += " " + t(letter.wishes.length >= 5 ? "letter.bigList" : "letter.smallList");
         paragraphs.push(wishLine);
       }
 
       if (letter.message) {
-        paragraphs.push("I loved reading what you wrote to me. Letters like yours are what make my workshop so cheerful every December.");
+        paragraphs.push(t("letter.readMessage"));
       }
 
       paragraphs.push(
-        letter.promised
-          ? "And thank you for promising to be good. I checked my list twice — you're on the Nice List! ⭐"
-          : "Oh, and I checked my list twice — you're on the Nice List! ⭐"
+        t(letter.promised ? "letter.promised" : "letter.notPromised")
       );
 
-      paragraphs.push(pick(CLOSINGS));
+      paragraphs.push(pick(t("letter.closings")));
 
       replyBody.replaceChildren(
-        el("p", `Dear ${letter.name},`, "letter-paper__greeting"),
+        el("p", t("letter.dear", { name: letter.name }), "letter-paper__greeting"),
         ...paragraphs.map((p) => el("p", p)),
-        el("p", "Ho ho ho! With love,", "letter-paper__closing"),
-        el("p", "Santa Claus 🎅", "letter-paper__signature"),
+        el("p", t("letter.closing"), "letter-paper__closing"),
+        el("p", t("letter.signature"), "letter-paper__signature"),
       );
 
       // A copy of the child's own letter, for printing / keepsake.
-      const parts = [el("p", "Dear Santa,", "letter-paper__greeting")];
-      if (letter.age) parts.push(el("p", `My name is ${letter.name} and I am ${letter.age} years old.`));
-      else parts.push(el("p", `My name is ${letter.name}.`));
+      const parts = [el("p", t("letter.greeting"), "letter-paper__greeting")];
+      if (letter.age) parts.push(el("p", t("letter.childNameAge", { name: letter.name, age: letter.age })));
+      else parts.push(el("p", t("letter.childName", { name: letter.name })));
       if (letter.message) letter.message.split(/\n+/).forEach((line) => parts.push(el("p", line)));
       if (letter.wishes.length) {
-        parts.push(el("p", "This year I would like:"));
+        parts.push(el("p", t("letter.childWishes")));
         const ul = document.createElement("ul");
         letter.wishes.forEach((w) => ul.appendChild(el("li", w)));
         parts.push(ul);
       }
-      if (letter.promised) parts.push(el("p", "I promise to be good!"));
-      parts.push(el("p", "Love,", "letter-paper__closing"), el("p", letter.name, "letter-paper__signature"));
+      if (letter.promised) parts.push(el("p", t("letter.childPromise")));
+      parts.push(el("p", t("letter.childLove"), "letter-paper__closing"), el("p", letter.name, "letter-paper__signature"));
       original.replaceChildren(...parts);
     }
 
@@ -238,17 +206,12 @@
     return node;
   }
 
-  function joinList(items) {
-    if (items.length === 1) return items[0];
-    return items.slice(0, -1).join(", ") + " and " + items[items.length - 1];
-  }
-
   SantaFeatures.register({
     id: "letter-to-santa",
     icon: "✉️",
-    title: "Letter to Santa",
-    shortTitle: "Letter",
-    description: "Write Santa your wish list and get a personal reply.",
+    title: t("features.letter.title"),
+    shortTitle: t("features.letter.short"),
+    description: t("features.letter.desc"),
     init,
   });
 })();

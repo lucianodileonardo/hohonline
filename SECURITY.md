@@ -27,7 +27,7 @@ misconfigured hosting, and the container runtime.
 | nginx | Only `GET`/`HEAD` (others → 405), hidden files (`.git`, `.env`…) → 404, no directory listing, no version in `Server` header, small body limit and short timeouts. |
 | Container | Non-root user, files owned by root and read-only, read-only root filesystem, all Linux capabilities dropped, `no-new-privileges`, memory and process limits (`npm run container:run`). |
 | Build | `npm ci --ignore-scripts` (no third-party install scripts), only needed files in the image (`.dockerignore`), no runtime npm dependencies. |
-| Dev server | `npm start` / `npm run preview` are reachable on the LAN, with directory listings disabled (`serve.json`). Individual project files can still be fetched by exact path, so use the dev server only on trusted networks; use the container for anything public. |
+| Dev server | `npm start` / `npm run preview` are reachable on the LAN. `npm start` (`scripts/dev-server.mjs`) serves only the public files (index.html, css/, js/, vendor/, images/, fonts/), so .git, scripts and config answer 404; `npm run preview` serves only the built `dist/`. Neither sends the security headers, so use them only on trusted networks; use the container or Apache for anything public. |
 | Dependencies | `npm audit`: 0 known vulnerabilities. The zip packager uses only Node built-ins. |
 
 ## Known limitations / accepted risks

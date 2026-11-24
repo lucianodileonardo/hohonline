@@ -9,7 +9,7 @@
   const U = SantaUtils;
   const HOUR = 3600000;
   const DEMO_MS = 75000;
-  const NORTH_POLE = { name: "North Pole", flag: "🎅", lat: 84, lon: 0 };
+  const NORTH_POLE = { id: "north-pole", name: I18n.t("tracker.northPole"), flag: "🎅", lat: 84, lon: 0 };
 
   // [name, flag, lat, lon, UTC offset in December]
   const CITIES = [
@@ -52,17 +52,6 @@
 
   const TOTAL_GIFTS = 2_200_000_000;
 
-  const PREP_MESSAGES = [
-    "🧝 The elves are painting toy trains in the workshop.",
-    "🦌 The reindeer are doing their flying practice.",
-    "📜 Santa is checking his list (twice!).",
-    "🍪 Mrs. Claus is baking cookies for the long trip.",
-    "🛷 The sleigh is getting a fresh coat of polish.",
-    "🎁 The wrapping department is running out of ribbon!",
-    "🗺️ Santa is studying the map of the world.",
-    "🥕 Rudolph is eating extra carrots for energy.",
-  ];
-
   let els = {};
   let map = null;
   let santaMarker = null;
@@ -96,7 +85,7 @@
     for (const [name, flag, lat, lon, offset] of CITIES) {
       const t = midnightUTC - offset * HOUR;
       if (!groups.has(t)) groups.set(t, []);
-      groups.get(t).push({ name, flag, lat, lon });
+      groups.get(t).push({ id: name, name: I18n.t("tracker.cities")[name] || name, flag, lat, lon });
     }
     const stops = [];
     for (const [t, cities] of [...groups.entries()].sort((a, b) => a[0] - b[0])) {
@@ -129,7 +118,7 @@
       if (!window.L) {
         const msg = document.createElement("p");
         msg.className = "tracker-map__error";
-        msg.textContent = "🗺️ The map couldn't load. Santa's status above still works!";
+        msg.textContent = I18n.t("tracker.mapError");
         els.mapEl.replaceChildren(msg);
       }
       return;
@@ -148,7 +137,7 @@
     );
     L.marker([NORTH_POLE.lat, NORTH_POLE.lon], {
       icon: L.divIcon({ className: "tracker-pole", html: "🏠", iconSize: [28, 28] }),
-    }).bindTooltip("Santa's Workshop, North Pole").addTo(map);
+    }).bindTooltip(I18n.t("tracker.workshop")).addTo(map);
 
     routeLine = L.polyline([], { color: "#f8b229", weight: 3, dashArray: "6 8" }).addTo(map);
     santaMarker = L.marker([NORTH_POLE.lat, NORTH_POLE.lon], {
@@ -213,44 +202,46 @@
     const progress = Math.max(0, Math.min(1, (t - route.takeoff) / (route.landing - route.takeoff)));
 
     if (phase === "preparing") {
-      els.phase.textContent = "🏠 Preparing at the North Pole";
+      els.phase.textContent = I18n.t("tracker.phasePreparing");
       els.phase.dataset.phase = "preparing";
       if (Math.floor(t / 6000) !== prepIndex) {
         prepIndex = Math.floor(t / 6000);
-        els.text.textContent = PREP_MESSAGES[prepIndex % PREP_MESSAGES.length];
+        const prep = I18n.t("tracker.prep");
+        els.text.textContent = prep[prepIndex % prep.length];
       }
-      els.stat1Label.textContent = "Takeoff in";
+      els.stat1Label.textContent = I18n.t("tracker.takeoffIn");
       els.stat1.textContent = countdown(route.takeoff - t);
-      els.stat2Label.textContent = "Toys ready";
+      els.stat2Label.textContent = I18n.t("tracker.toysReady");
       const yearStart = Date.UTC(new Date(t).getUTCFullYear(), 0, 1);
       els.stat2.textContent = Math.min(99, Math.floor(((t - yearStart) / (route.takeoff - yearStart)) * 100)) + "%";
     } else if (phase === "flying") {
-      els.phase.textContent = "🛷 Santa is flying!";
+      els.phase.textContent = I18n.t("tracker.phaseFlying");
       els.phase.dataset.phase = "flying";
-      if (nextStop && nextStop.name === NORTH_POLE.name) {
-        els.text.textContent = "All the presents are delivered! Santa is flying back home to the North Pole. 🏠";
+      const place = (p) => `${p.flag} ${p.name}`;
+      if (nextStop && nextStop.id === NORTH_POLE.id) {
+        els.text.textContent = I18n.t("tracker.flyingHome");
       } else if (lastStop) {
-        els.text.textContent = `Santa just visited ${lastStop.flag} ${lastStop.name}. Next stop: ${nextStop.flag} ${nextStop.name} in ${countdown(nextStop.time - t)}.`;
+        els.text.textContent = I18n.t("tracker.justVisited", { last: place(lastStop), next: place(nextStop), time: countdown(nextStop.time - t) });
       } else {
-        els.text.textContent = `Santa has taken off! First stop: ${nextStop.flag} ${nextStop.name} in ${countdown(nextStop.time - t)}.`;
+        els.text.textContent = I18n.t("tracker.tookOff", { next: place(nextStop), time: countdown(nextStop.time - t) });
       }
-      els.stat1Label.textContent = "Presents delivered";
-      els.stat1.textContent = Math.floor(TOTAL_GIFTS * easeProgress(progress)).toLocaleString("en-US");
-      els.stat2Label.textContent = "Cities visited";
+      els.stat1Label.textContent = I18n.t("tracker.presents");
+      els.stat1.textContent = I18n.number(Math.floor(TOTAL_GIFTS * easeProgress(progress)));
+      els.stat2Label.textContent = I18n.t("tracker.citiesVisited");
       els.stat2.textContent = `${visited} / ${route.points.length - 2}`;
     } else {
-      els.phase.textContent = "😴 Back home";
+      els.phase.textContent = I18n.t("tracker.phaseHome");
       els.phase.dataset.phase = "home";
-      els.text.textContent = "Santa delivered every present and is now resting by the fire with Mrs. Claus. See you next Christmas!";
-      els.stat1Label.textContent = "Presents delivered";
-      els.stat1.textContent = TOTAL_GIFTS.toLocaleString("en-US");
-      els.stat2Label.textContent = "Next Christmas in";
-      els.stat2.textContent = `${U.daysUntilChristmas(new Date(t))} days`;
+      els.text.textContent = I18n.t("tracker.homeText");
+      els.stat1Label.textContent = I18n.t("tracker.presents");
+      els.stat1.textContent = I18n.number(TOTAL_GIFTS);
+      els.stat2Label.textContent = I18n.t("tracker.nextXmas");
+      els.stat2.textContent = I18n.plural("tracker.days", U.daysUntilChristmas(new Date(t)));
     }
 
     els.hint.textContent = demo
-      ? `▶️ Preview mode — replaying Christmas Eve at super speed (${new Date(t).toUTCString().slice(17, 22)} UTC).`
-      : "Santa leaves the North Pole on December 24 and reaches each city at midnight, local time.";
+      ? I18n.t("tracker.previewHint", { time: new Date(t).toUTCString().slice(17, 22) })
+      : I18n.t("tracker.hint");
   }
 
   function easeProgress(p) {
@@ -301,9 +292,10 @@
     const h = Math.floor((s % 86400) / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = s % 60;
-    if (d > 0) return `${d}d ${h}h ${m}m ${sec}s`;
-    if (h > 0) return `${h}h ${m}m ${sec}s`;
-    return `${m}m ${String(sec).padStart(2, "0")}s`;
+    const u = I18n.t("tracker.units");
+    if (d > 0) return `${d}${u.d} ${h}${u.h} ${m}${u.m} ${sec}${u.s}`;
+    if (h > 0) return `${h}${u.h} ${m}${u.m} ${sec}${u.s}`;
+    return `${m}${u.m} ${String(sec).padStart(2, "0")}${u.s}`;
   }
 
   // ---------- Demo ----------
@@ -315,14 +307,14 @@
       simStart: route.takeoff - 5 * 60000,
       speed: (route.landing - route.takeoff + 35 * 60000) / DEMO_MS,
     };
-    els.demoBtn.textContent = "⏹️ Stop preview";
+    els.demoBtn.textContent = I18n.t("tracker.stop");
     lastPhase = null;
     restartLoop(250);
   }
 
   function stopDemo() {
     demo = null;
-    els.demoBtn.textContent = "▶️ Preview Christmas Eve";
+    els.demoBtn.textContent = I18n.t("tracker.demo");
     lastPhase = null;
     restartLoop(1000);
   }
@@ -345,16 +337,16 @@
     timer = null;
     if (demo) {
       demo = null;
-      els.demoBtn.textContent = "▶️ Preview Christmas Eve";
+      els.demoBtn.textContent = I18n.t("tracker.demo");
     }
   }
 
   SantaFeatures.register({
     id: "santa-tracker",
     icon: "🛷",
-    title: "Santa Tracker",
-    shortTitle: "Tracker",
-    description: "Follow Santa's sleigh around the world on Christmas Eve.",
+    title: I18n.t("features.tracker.title"),
+    shortTitle: I18n.t("features.tracker.short"),
+    description: I18n.t("features.tracker.desc"),
     init,
     onShow,
     onHide,

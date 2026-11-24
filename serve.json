@@ -1,4 +1,0 @@
-{
-  "directoryListing": false,
-  "unlisted": [".*", "node_modules", "scripts", "dist", "release"]
-}

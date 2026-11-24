@@ -17,7 +17,7 @@ import { transform } from "esbuild";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = path.join(ROOT, "dist");
-const STATIC_DIRS = ["vendor", "images", "audio", "fonts"]; // copied as-is if they exist
+const STATIC_DIRS = ["vendor", "images", "fonts"]; // copied as-is if they exist
 const STATIC_FILES = ["robots.txt", "favicon.ico"];
 
 const hash = (text) => createHash("sha256").update(text).digest("hex").slice(0, 10);

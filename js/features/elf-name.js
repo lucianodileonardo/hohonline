@@ -5,41 +5,8 @@
 (function () {
   const U = SantaUtils;
 
-  const FIRST = [
-    "Jingle", "Twinkle", "Sparkle", "Tinsel", "Buddy", "Pepper", "Sugarplum", "Snowy",
-    "Merry", "Cocoa", "Holly", "Ginger", "Frosty", "Poppy", "Candy", "Bell",
-    "Sprinkle", "Noel", "Cookie", "Marshmallow", "Pudding", "Starla", "Nutmeg", "Clove",
-  ];
+  const { t } = I18n;
 
-  const LAST = [
-    "Sparkletoes", "McJingles", "Snowflake", "Candycane", "Gumdrop", "Mistletoe",
-    "Fizzlewick", "Plumpudding", "Tinseltoes", "Peppermint", "Frostbottom", "Glitterboots",
-    "Cinnamon", "Sleighbell", "Twinkletoes", "Hollyberry", "Jollybean", "Snowdrop",
-    "Gingersnap", "Merrywhistle",
-  ];
-
-  const JOBS = [
-    ["Chief Cookie Taster", "Kitchen & Bakery"],
-    ["Head of Wrapping Paper", "Wrapping Department"],
-    ["Reindeer Hairstylist", "Reindeer Stables"],
-    ["Toy Quality Inspector", "Toy Workshop"],
-    ["Sleigh Polisher", "Sleigh Garage"],
-    ["Snowball Engineer", "Research & Snow Development"],
-    ["Bell Tuner", "Music Department"],
-    ["Candy Cane Striper", "Candy Factory"],
-    ["Letter Reader", "Santa's Mailroom"],
-    ["Hot Cocoa Barista", "Kitchen & Bakery"],
-    ["Chimney Measurement Expert", "Delivery Planning"],
-    ["Ribbon Curler", "Wrapping Department"],
-    ["Teddy Bear Stuffer", "Toy Workshop"],
-    ["Snow Globe Shaker", "Toy Workshop"],
-    ["Sleigh Map Navigator", "Delivery Planning"],
-    ["Nice List Keeper", "Santa's Office"],
-    ["Carrot Supplier for Rudolph", "Reindeer Stables"],
-    ["Christmas Light Untangler", "Decorations Department"],
-  ];
-
-  const TREATS = ["Gingerbread", "Candy canes", "Hot cocoa", "Sugar cookies", "Marshmallows", "Fruitcake", "Peppermint bark", "Chocolate coins"];
   const AVATARS = ["🧝", "🧝‍♀️", "🧝‍♂️", "🧝🏻", "🧝🏽", "🧝🏿", "🧝🏻‍♀️", "🧝🏾‍♀️", "🧝🏼‍♂️", "🧝🏿‍♂️"];
 
   const W = 1000;
@@ -51,13 +18,13 @@
   function makeElf(name) {
     const rand = U.seededRandom(U.hashString(name.toLowerCase()));
     const at = (list) => list[Math.floor(rand() * list.length)];
-    const [job, department] = at(JOBS);
+    const [job, department] = at(t("elf.jobs"));
     return {
       realName: name,
-      elfName: `${at(FIRST)} ${at(LAST)}`,
+      elfName: `${at(t("elf.first"))} ${at(t("elf.last"))}`,
       job,
       department,
-      treat: at(TREATS),
+      treat: at(t("elf.treats")),
       avatar: at(AVATARS),
       years: 1 + Math.floor(rand() * 300),
       id: "ELF-" + String(Math.floor(rand() * 1e6)).padStart(6, "0"),
@@ -81,7 +48,7 @@
       current = makeElf(name);
       await U.fontsReady();
       draw(current);
-      reveal.textContent = `${name}, your elf name is ${current.elfName}!`;
+      reveal.textContent = t("elf.reveal", { name, elf: current.elfName });
       shareHint.textContent = "";
       form.hidden = true;
       result.hidden = false;
@@ -89,7 +56,7 @@
     });
 
     document.getElementById("elf-download").addEventListener("click", () => {
-      if (current) U.downloadCanvas(canvas, `elf-id-${U.slug(current.elfName)}.png`);
+      if (current) U.downloadCanvas(canvas, t("elf.file", { name: U.slug(current.elfName) }));
     });
 
     document.getElementById("elf-share").addEventListener("click", share);
@@ -104,7 +71,7 @@
 
   async function share() {
     if (!current) return;
-    const text = `🧝 My elf name is ${current.elfName}, ${current.job} at the North Pole! Find your elf name:`;
+    const text = t("elf.shareText", { elf: current.elfName, job: current.job });
     const url = location.href.split("#")[0] + "#elf-name";
     try {
       if (navigator.share) {
@@ -118,10 +85,10 @@
         return;
       }
       await navigator.clipboard.writeText(`${text} ${url}`);
-      shareHint.textContent = "✅ Copied! Paste it to your friends.";
+      shareHint.textContent = t("elf.copied");
     } catch (e) {
       if (e && e.name === "AbortError") return;
-      shareHint.textContent = "Sharing isn't available here — download the card instead!";
+      shareHint.textContent = t("elf.shareFail");
     }
   }
 
@@ -155,8 +122,7 @@
     ctx.fillStyle = "#fff";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.font = '700 54px "Mountains of Christmas", serif';
-    ctx.fillText("North Pole · Official Elf ID", 40, 62);
+    U.fitText(ctx, t("elf.cardTitle"), 40, 62, W - 160, 54, '700 {size} "Mountains of Christmas", serif');
     ctx.font = "56px serif";
     ctx.textAlign = "right";
     ctx.fillText("🎄", W - 40, 62);
@@ -184,13 +150,13 @@
     U.fitText(ctx, elf.elfName, tx, 240, W - tx - 40, 76, '700 {size} "Mountains of Christmas", serif');
 
     ctx.fillStyle = "#7a6250";
-    U.fitText(ctx, `a.k.a. ${elf.realName}`, tx, 285, W - tx - 40, 28, 'italic 400 {size} "Nunito", sans-serif');
+    U.fitText(ctx, t("elf.aka", { name: elf.realName }), tx, 285, W - tx - 40, 28, 'italic 400 {size} "Nunito", sans-serif');
 
     const rows = [
-      ["JOB", elf.job],
-      ["DEPARTMENT", elf.department],
-      ["FAVORITE TREAT", elf.treat],
-      ["YEARS OF SERVICE", String(elf.years)],
+      [t("elf.jobLabel"), elf.job],
+      [t("elf.deptLabel"), elf.department],
+      [t("elf.treatLabel"), elf.treat],
+      [t("elf.yearsLabel"), String(elf.years)],
     ];
     rows.forEach(([label, value], i) => {
       const y = 340 + i * 56;
@@ -215,8 +181,7 @@
 
     ctx.textAlign = "right";
     ctx.fillStyle = "#c8102e";
-    ctx.font = '700 48px "Mountains of Christmas", serif';
-    ctx.fillText("Santa Claus", W - 50, 570);
+    U.fitText(ctx, t("common.santa"), W - 50, 570, 290, 48, '700 {size} "Mountains of Christmas", serif');
     ctx.strokeStyle = "#2a1a12";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -225,7 +190,7 @@
     ctx.stroke();
     ctx.fillStyle = "#7a6250";
     ctx.font = '400 18px "Nunito", sans-serif';
-    ctx.fillText("Approved by Santa", W - 50, 606);
+    ctx.fillText(t("elf.approved"), W - 50, 606);
 
     ctx.restore();
 
@@ -239,9 +204,9 @@
   SantaFeatures.register({
     id: "elf-name",
     icon: "🧝",
-    title: "Elf Name Generator",
-    shortTitle: "Elf Name",
-    description: "Discover your elf name and North Pole job — with an official Elf ID card.",
+    title: t("features.elf.title"),
+    shortTitle: t("features.elf.short"),
+    description: t("features.elf.desc"),
     init,
   });
 })();

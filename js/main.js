@@ -3,6 +3,16 @@
  * feature, and shows one feature at a time based on the URL hash (#feature-id).
  */
 window.SantaRouter = (function () {
+  const { t } = I18n;
+
+  // Static texts in the page (data-i18n), then the language switch.
+  I18n.applyDom();
+  for (const btn of document.querySelectorAll("#lang-switch [data-lang]")) {
+    const active = btn.dataset.lang === I18n.lang;
+    btn.setAttribute("aria-pressed", String(active));
+    btn.addEventListener("click", () => I18n.setLang(btn.dataset.lang));
+  }
+
   const nav = document.getElementById("nav");
   const grid = document.getElementById("feature-grid");
   const home = [document.getElementById("home"), document.querySelector(".features")];
@@ -45,7 +55,7 @@ window.SantaRouter = (function () {
       const back = document.createElement("a");
       back.href = "#";
       back.className = "back-link no-print";
-      back.textContent = "← All features";
+      back.textContent = t("site.back");
       panel.prepend(back);
       panel.hidden = true;
     }
@@ -58,7 +68,7 @@ window.SantaRouter = (function () {
     card.classList.add("feature-card--soon");
     const tag = document.createElement("span");
     tag.className = "feature-card__tag";
-    tag.textContent = "Coming soon";
+    tag.textContent = t("site.comingSoon");
     card.appendChild(tag);
     grid.appendChild(card);
   });
@@ -88,7 +98,7 @@ window.SantaRouter = (function () {
       else link.removeAttribute("aria-current");
     }
 
-    document.title = next ? `${next.title} · North Pole Online` : "North Pole Online";
+    document.title = next ? t("site.docTitle", { feature: next.title }) : t("site.title");
     window.scrollTo(0, 0);
 
     const data = pendingData;
@@ -109,9 +119,9 @@ window.SantaRouter = (function () {
   function updateCountdown() {
     const days = SantaUtils.daysUntilChristmas();
     countdown.textContent =
-      days === 0 ? "🎄 Merry Christmas! 🎄" :
-      days === 1 ? "🎄 Christmas is tomorrow!" :
-      `🎄 ${days} days until Christmas`;
+      days === 0 ? t("countdown.today") :
+      days === 1 ? t("countdown.tomorrow") :
+      I18n.plural("countdown.days", days);
   }
   updateCountdown();
   setInterval(updateCountdown, 60 * 60 * 1000);

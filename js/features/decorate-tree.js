@@ -12,22 +12,22 @@
 
   // Balls are drawn; everything else is an emoji.
   const DECORATIONS = [
-    { id: "ball-red", kind: "ball", color: "#d7263d", label: "Red ball" },
-    { id: "ball-gold", kind: "ball", color: "#f2b632", label: "Gold ball" },
-    { id: "ball-blue", kind: "ball", color: "#2e86de", label: "Blue ball" },
-    { id: "ball-silver", kind: "ball", color: "#c9d1d9", label: "Silver ball" },
-    { id: "ball-purple", kind: "ball", color: "#8e44ad", label: "Purple ball" },
-    { id: "bell", kind: "emoji", char: "🔔", label: "Bell" },
-    { id: "bow", kind: "emoji", char: "🎀", label: "Bow" },
-    { id: "candy", kind: "emoji", char: "🍬", label: "Candy" },
-    { id: "lolly", kind: "emoji", char: "🍭", label: "Lollipop" },
-    { id: "star", kind: "emoji", char: "⭐", label: "Star" },
-    { id: "snowflake", kind: "emoji", char: "❄️", label: "Snowflake" },
-    { id: "cookie", kind: "emoji", char: "🍪", label: "Cookie" },
-    { id: "bear", kind: "emoji", char: "🧸", label: "Teddy bear" },
-    { id: "deer", kind: "emoji", char: "🦌", label: "Reindeer" },
-    { id: "angel", kind: "emoji", char: "👼", label: "Angel" },
-    { id: "gift", kind: "emoji", char: "🎁", label: "Present" },
+    { id: "ball-red", kind: "ball", color: "#d7263d" },
+    { id: "ball-gold", kind: "ball", color: "#f2b632" },
+    { id: "ball-blue", kind: "ball", color: "#2e86de" },
+    { id: "ball-silver", kind: "ball", color: "#c9d1d9" },
+    { id: "ball-purple", kind: "ball", color: "#8e44ad" },
+    { id: "bell", kind: "emoji", char: "🔔" },
+    { id: "bow", kind: "emoji", char: "🎀" },
+    { id: "candy", kind: "emoji", char: "🍬" },
+    { id: "lolly", kind: "emoji", char: "🍭" },
+    { id: "star", kind: "emoji", char: "⭐" },
+    { id: "snowflake", kind: "emoji", char: "❄️" },
+    { id: "cookie", kind: "emoji", char: "🍪" },
+    { id: "bear", kind: "emoji", char: "🧸" },
+    { id: "deer", kind: "emoji", char: "🦌" },
+    { id: "angel", kind: "emoji", char: "👼" },
+    { id: "gift", kind: "emoji", char: "🎁" },
   ];
   const BY_ID = Object.freeze(Object.assign(Object.create(null), Object.fromEntries(DECORATIONS.map((d) => [d.id, d]))));
 
@@ -103,7 +103,7 @@
     });
 
     document.getElementById("tree-download").addEventListener("click", () => {
-      U.downloadCanvas(canvas, "my-christmas-tree.png");
+      U.downloadCanvas(canvas, I18n.t("tree.file"));
     });
 
     syncButtons();
@@ -133,8 +133,9 @@
       btn.type = "button";
       btn.className = "tree-swatch";
       btn.setAttribute("role", "radio");
-      btn.setAttribute("aria-label", d.label);
-      btn.title = d.label;
+      const label = I18n.t(`tree.items.${d.id}`);
+      btn.setAttribute("aria-label", label);
+      btn.title = label;
       btn.dataset.id = d.id;
       if (d.kind === "ball") {
         const dot = document.createElement("span");
@@ -441,9 +442,9 @@
   SantaFeatures.register({
     id: "decorate-tree",
     icon: "🎄",
-    title: "Decorate the Tree",
-    shortTitle: "Tree",
-    description: "Hang ornaments, switch on the lights and download your own Christmas tree.",
+    title: I18n.t("features.tree.title"),
+    shortTitle: I18n.t("features.tree.short"),
+    description: I18n.t("features.tree.desc"),
     init,
     onShow: () => { syncLights(); draw(); },
     onHide: () => {

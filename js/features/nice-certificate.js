@@ -5,13 +5,7 @@
 (function () {
   const U = SantaUtils;
 
-  const REASONS = [
-    "for outstanding kindness, generosity and Christmas spirit",
-    "for being a wonderful friend and a great helper all year long",
-    "for sharing, caring and spreading smiles everywhere",
-    "for good manners, big hugs and a very kind heart",
-    "for being brave, helpful and full of Christmas cheer",
-  ];
+  const { t } = I18n;
 
   const W = 1600;
   const H = 1131;
@@ -34,7 +28,7 @@
     });
 
     document.getElementById("cert-download").addEventListener("click", () => {
-      U.downloadCanvas(canvas, `nice-list-certificate-${U.slug(currentName)}.png`);
+      U.downloadCanvas(canvas, t("cert.file", { name: U.slug(currentName) }));
     });
     document.getElementById("cert-print").addEventListener("click", () => window.print());
     document.getElementById("cert-again").addEventListener("click", () => {
@@ -64,7 +58,8 @@
   function draw(name) {
     const year = U.christmasYear();
     const seed = U.hashString(name.toLowerCase());
-    const reason = REASONS[seed % REASONS.length];
+    const reasons = t("cert.reasons");
+    const reason = reasons[seed % reasons.length];
     const number = `NP-${year}-${String(seed % 100000).padStart(5, "0")}`;
     const cx = W / 2;
 
@@ -111,15 +106,14 @@
     ctx.fillStyle = "#146b3a";
     ctx.font = '800 30px "Nunito", sans-serif';
     ctx.textBaseline = "alphabetic";
-    drawSpaced("★  OFFICIAL NORTH POLE DOCUMENT  ★", cx, 180, 6);
+    drawSpaced(t("cert.official"), cx, 180, 6);
 
     ctx.fillStyle = "#c8102e";
-    ctx.font = '700 130px "Mountains of Christmas", serif';
-    ctx.fillText("Nice List Certificate", cx, 320);
+    U.fitText(ctx, t("cert.title"), cx, 320, W - 340, 130, '700 {size} "Mountains of Christmas", serif');
 
     ctx.fillStyle = "#5a4636";
     ctx.font = 'italic 400 38px "Nunito", sans-serif';
-    ctx.fillText("This is to certify that", cx, 420);
+    ctx.fillText(t("cert.certify"), cx, 420);
 
     // Name
     ctx.fillStyle = "#146b3a";
@@ -132,11 +126,9 @@
     ctx.stroke();
 
     ctx.fillStyle = "#2a1a12";
-    ctx.font = '600 38px "Nunito", sans-serif';
-    ctx.fillText(`has been officially placed on Santa's Nice List for Christmas ${year}`, cx, 670);
+    U.fitText(ctx, t("cert.placed", { year }), cx, 670, W - 300, 38, '600 {size} "Nunito", sans-serif');
     ctx.fillStyle = "#5a4636";
-    ctx.font = 'italic 400 34px "Nunito", sans-serif';
-    ctx.fillText(reason + ".", cx, 725);
+    U.fitText(ctx, reason + ".", cx, 725, W - 300, 34, 'italic 400 {size} "Nunito", sans-serif');
 
     // Seal
     drawSeal(cx, 880);
@@ -155,17 +147,16 @@
     ctx.font = '600 34px "Nunito", sans-serif';
     ctx.fillText(U.formatDate(), 460, lineY - 20);
     ctx.fillStyle = "#c8102e";
-    ctx.font = '700 70px "Mountains of Christmas", serif';
-    ctx.fillText("Santa Claus", W - 460, lineY - 18);
+    U.fitText(ctx, t("common.santa"), W - 460, lineY - 18, 400, 70, '700 {size} "Mountains of Christmas", serif');
 
     ctx.fillStyle = "#7a6250";
     ctx.font = '400 26px "Nunito", sans-serif';
-    ctx.fillText("Date · North Pole", 460, lineY + 40);
-    ctx.fillText("Santa Claus, Chief of the North Pole", W - 460, lineY + 40);
+    ctx.fillText(t("cert.dateLabel"), 460, lineY + 40);
+    U.fitText(ctx, t("cert.santaTitle"), W - 460, lineY + 40, 480, 26, '400 {size} "Nunito", sans-serif');
 
     ctx.font = '600 22px "Nunito", sans-serif';
     ctx.fillStyle = "#a08a70";
-    ctx.fillText(`Certificate No. ${number}`, 460, lineY + 85);
+    ctx.fillText(t("cert.number", { number }), 460, lineY + 85);
   }
 
   function drawSpaced(text, x, y, spacing) {
@@ -219,20 +210,17 @@
 
     ctx.fillStyle = "#7a4a00";
     ctx.textAlign = "center";
-    ctx.font = '800 22px "Nunito", sans-serif';
-    ctx.fillText("SANTA'S", x, y - 22);
-    ctx.font = '800 40px "Nunito", sans-serif';
-    ctx.fillText("NICE", x, y + 18);
-    ctx.font = '800 22px "Nunito", sans-serif';
-    ctx.fillText("★ LIST ★", x, y + 48);
+    U.fitText(ctx, t("cert.sealTop"), x, y - 22, 130, 22, '800 {size} "Nunito", sans-serif');
+    U.fitText(ctx, t("cert.sealMid"), x, y + 18, 136, 40, '800 {size} "Nunito", sans-serif');
+    U.fitText(ctx, t("cert.sealBottom"), x, y + 48, 130, 22, '800 {size} "Nunito", sans-serif');
   }
 
   SantaFeatures.register({
     id: "nice-certificate",
     icon: "🏅",
-    title: "Nice List Certificate",
-    shortTitle: "Certificate",
-    description: "Get an official, printable certificate signed by Santa.",
+    title: t("features.cert.title"),
+    shortTitle: t("features.cert.short"),
+    description: t("features.cert.desc"),
     init,
     onShow,
   });

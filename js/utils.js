@@ -81,7 +81,7 @@ window.SantaUtils = (function () {
   }
 
   function formatDate(date = new Date()) {
-    return date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+    return date.toLocaleDateString(window.I18n ? I18n.locale : "en-GB", { day: "numeric", month: "long", year: "numeric" });
   }
 
   /** Waits for the web fonts used on canvases (never rejects). */
